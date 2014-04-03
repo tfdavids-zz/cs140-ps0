@@ -27,6 +27,20 @@ run: caltrain reaction
 	./reaction 100
 	./reaction 100
 
+water: reaction
+	./reaction 0
+	./reaction 0
+	./reaction 20
+	./reaction 20
+	./reaction 40
+	./reaction 40
+	./reaction 60
+	./reaction 60
+	./reaction 80
+	./reaction 80
+	./reaction 100
+	./reaction 100
+
 clean:
 	$(RM) caltrain reaction
 	$(RM) -r *.dSYM
