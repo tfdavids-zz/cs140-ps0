@@ -57,9 +57,11 @@ station_wait_for_train(struct station *station)
         cond_wait(&station->space_available, &station->lock);
 
     // now there's space; get on the train!
-    station_on_board(station);
     station->num_waiting--;
     station->num_seats--;
+    // station_on_board(station);
+
+    // let the train know it might be allowed to leave
     cond_signal(&station->train_may_leave, &station->lock);
 
     // now give back the lock
@@ -69,7 +71,5 @@ station_wait_for_train(struct station *station)
 void
 station_on_board(struct station *station)
 {
-    // station->num_waiting--;
-    // station->num_seats--;
-    // cond_signal(&station->train_may_leave, &station->lock);
+    return;
 }
