@@ -168,7 +168,7 @@ main()
 		passengers_left -= threads_reaped;
 		total_passengers_boarded += threads_reaped;
 		printf("Train departed station with %d new passenger(s) (expected %d)%s\n",
-			threads_to_reap, threads_reaped,
+			threads_reaped, threads_to_reap,
 			(threads_to_reap != threads_reaped) ? " *****" : "");
 
 		if (threads_to_reap != threads_reaped) {
