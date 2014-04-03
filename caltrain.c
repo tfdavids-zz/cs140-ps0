@@ -3,6 +3,7 @@
 struct station {
     size_t num_waiting; // number of passengers waiting
     size_t num_seats; // number of seats available
+    size_t num_seated; // number of passengers on seats
 
     struct lock lock; // monitor lock
     struct condition space_available;
@@ -16,6 +17,7 @@ station_init(struct station *station)
 {
     station->num_waiting = 0;
     station->num_seats = 0;
+    station->num_seated = 0;
 
     lock_init(&station->lock);
     cond_init(&station->space_available);
@@ -25,46 +27,28 @@ station_init(struct station *station)
 void
 station_load_train(struct station *station, int count)
 {
-    // grab the lock
     lock_acquire(&station->lock);
-
-    // tell the station we have seats available, then tell the passengers
-    station->num_seats += count;
+    station->num_seated = 0;
+    station->num_seats = count;
     cond_broadcast(&station->space_available, &station->lock);
-
-    // now wait for them to board
-    while (station->num_seats > 0 && station->num_waiting > 0)
+    while (station->num_seated < station->num_seats && station->num_waiting > 0)
         cond_wait(&station->train_may_leave, &station->lock);
-
-    // now the train will leave, so no more room
     station->num_seats = 0;
-
-    // now give back the lock
     lock_release(&station->lock);
 }
 
 void
 station_wait_for_train(struct station *station)
 {
-    // grab the lock
     lock_acquire(&station->lock);
-
-    // we're waiting at the station
     station->num_waiting++;
-
-    // while there's no room, keep waiting and let them have the lock back
-    while (station->num_seats == 0)
+    while (station->num_seated >= station->num_seats)
         cond_wait(&station->space_available, &station->lock);
-
-    // now there's space; get on the train!
+    // printf("Seating passenger (%zd seats on train, %zd passengers on train)\n", station->num_seats, station->num_seated);
+    // printf("");
+    station->num_seated++;
     station->num_waiting--;
-    station->num_seats--;
-    // station_on_board(station);
-
-    // let the train know it might be allowed to leave
     cond_signal(&station->train_may_leave, &station->lock);
-
-    // now give back the lock
     lock_release(&station->lock);
 }
 
