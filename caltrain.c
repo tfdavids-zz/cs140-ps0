@@ -1,17 +1,12 @@
 #include "pintos_thread.h"
 
 struct station {
-    size_t num_waiting; // number of passengers waiting
-    size_t num_seats; // number of seats available
-    size_t num_boarding; // number of people on the train
-    size_t num_boarded; // number of people in their seats
+    size_t num_waiting, num_seats, num_boarding, num_boarded;
 
-    struct lock lock; // monitor lock
+    struct lock lock;
     struct condition space_available;
     struct condition train_may_leave;
 };
-
-void station_on_board(struct station *station);
 
 void
 station_init(struct station *station)
