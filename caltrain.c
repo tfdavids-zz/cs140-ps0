@@ -3,8 +3,8 @@
 struct station {
     size_t num_waiting; // number of passengers waiting
     size_t num_seats; // number of seats available
-    size_t num_boarding;
-    size_t num_boarded;
+    size_t num_boarding; // number of people on the train
+    size_t num_boarded; // number of people in their seats
 
     struct lock lock; // monitor lock
     struct condition space_available;
