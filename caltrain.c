@@ -47,6 +47,7 @@ station_wait_for_train(struct station *station)
     station->num_waiting++;
     while (station->num_boarding == station->num_seats)
         cond_wait(&station->space_available, &station->lock);
+    // tell the station we're boarding, and not waiting anymore
     station->num_boarding++;
     station->num_waiting--;
     lock_release(&station->lock);
@@ -56,6 +57,7 @@ void
 station_on_board(struct station *station)
 {
     lock_acquire(&station->lock);
+    // tell the station we've boarded, and let the train know it might be able to leave
     station->num_boarded++;
     cond_signal(&station->train_may_leave, &station->lock);
     lock_release(&station->lock);
