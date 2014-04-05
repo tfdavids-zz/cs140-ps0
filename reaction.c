@@ -6,8 +6,7 @@
 void make_water();
 
 struct reaction {
-    size_t num_h; /* available h atoms */
-    size_t h_needed; /* h atoms needed */
+    size_t num_h, h_needed;
 
     struct lock lock;
     struct condition o_available;
@@ -41,10 +40,11 @@ void
 reaction_o(struct reaction *reaction)
 {
     lock_acquire(&reaction->lock);
-    while (reaction->num_h < 2)
-        cond_wait(&reaction->h_available, &reaction->lock);
     // need to wait until we have two h's available;
     // otherwise, we might use one when there's not another to use.
+    while (reaction->num_h < 2)
+        cond_wait(&reaction->h_available, &reaction->lock);
+    // now we know we can take at least two h's
     reaction->h_needed += 2;
     cond_broadcast(&reaction->o_available, &reaction->lock);
     reaction->num_h -= 2;
