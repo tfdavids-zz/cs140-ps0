@@ -6,7 +6,7 @@
 void make_water();
 
 struct reaction {
-    size_t num_h, h_needed;
+    size_t h_excess, h_needed;
 
     struct lock lock;
     struct condition o_available;
@@ -16,7 +16,7 @@ struct reaction {
 void
 reaction_init(struct reaction *reaction)
 {
-    reaction->num_h = 0;
+    reaction->h_excess = 0;
     reaction->h_needed = 0;
 
     lock_init(&reaction->lock);
@@ -28,7 +28,7 @@ void
 reaction_h(struct reaction *reaction)
 {
     lock_acquire(&reaction->lock);
-    reaction->num_h++;
+    reaction->h_excess++;
     cond_signal(&reaction->h_available, &reaction->lock);
     while (reaction->h_needed == 0)
         cond_wait(&reaction->o_available, &reaction->lock);
@@ -42,12 +42,12 @@ reaction_o(struct reaction *reaction)
     lock_acquire(&reaction->lock);
     // need to wait until we have two h's available;
     // otherwise, we might use one when there's not another to use.
-    while (reaction->num_h < 2)
+    while (reaction->h_excess < 2)
         cond_wait(&reaction->h_available, &reaction->lock);
     // now we know we can take at least two h's
     reaction->h_needed += 2;
+    reaction->h_excess -= 2;
     cond_broadcast(&reaction->o_available, &reaction->lock);
-    reaction->num_h -= 2;
     make_water();
     lock_release(&reaction->lock);
 }
