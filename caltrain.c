@@ -32,12 +32,12 @@ station_load_train(struct station *station, int count)
     station->num_seats = count;
     cond_broadcast(&station->space_available, &station->lock);
     // keep loading until we've filled the train, or until nobody is waiting
-    // and everyone who is boarding is in his or her seat
+    // or boarding
     while (station->num_boarded < station->num_seats
-           && (station->num_waiting > 0
-               || station->num_boarded < station->num_boarding))
+           && (station->num_waiting > 0 || station->num_boarding > 0))
         cond_wait(&station->train_may_leave, &station->lock);
     station->num_seats = 0;
+    station->num_boarded = 0;
     lock_release(&station->lock);
 }
 
@@ -46,7 +46,7 @@ station_wait_for_train(struct station *station)
 {
     lock_acquire(&station->lock);
     station->num_waiting++;
-    while (station->num_boarding == station->num_seats)
+    while (station->num_boarding + station->num_boarded >= station->num_seats)
         cond_wait(&station->space_available, &station->lock);
     // tell the station we're boarding, and not waiting anymore
     station->num_boarding++;
@@ -61,6 +61,7 @@ station_on_board(struct station *station)
     // tell the station we've boarded, and let
     // the train know it might be able to leave
     station->num_boarded++;
+    station->num_boarding--;
     cond_signal(&station->train_may_leave, &station->lock);
     lock_release(&station->lock);
 }
